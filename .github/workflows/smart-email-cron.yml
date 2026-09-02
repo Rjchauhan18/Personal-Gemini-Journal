@@ -1,0 +1,16 @@
+name: Smart Email Cron
+
+on:
+  schedule:
+    - cron: '0 */4 * * *' # Runs every 4 hours (6 times a day)
+  workflow_dispatch: # Allows you to click "Run workflow" manually in GitHub
+
+jobs:
+  trigger-smart-emails:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Smart Email Endpoint
+        run: |
+          curl -X POST https://reflect-ai-journal.ai.studio/api/cron/smart-email \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -w "\nHTTP Status: %{http_code}\n"
