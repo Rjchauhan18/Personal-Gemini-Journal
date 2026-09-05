@@ -1,0 +1,6 @@
+{
+  "name": "Reflect AI Journal",
+  "description": "A private, AI-powered journal for personal reflection and brainstorming.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

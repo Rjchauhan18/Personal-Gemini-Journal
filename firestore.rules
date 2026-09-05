@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    function isValidJournalEntryCreate(data, userId) {
+      return data.keys().hasAll(['title', 'createdAt', 'updatedAt', 'userId']) &&
+             data.keys().size() >= 4 && data.keys().size() <= 8 &&
+             data.title is string && data.title.size() <= 100 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             data.userId == userId &&
+             (!('summary' in data) || (data.summary is string && data.summary.size() <= 5000)) &&
+             (!('mood' in data) || (data.mood is string && data.mood.size() <= 10)) && (!('images' in data) || (data.images is list));
+    }
+    
+    function isValidJournalEntryUpdate(data, userId) {
+      return data.title is string && data.title.size() <= 100 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             data.userId == userId &&
+             (!('summary' in data) || (data.summary is string && data.summary.size() <= 5000)) &&
+             (!('mood' in data) || (data.mood is string && data.mood.size() <= 10));
+    }
+
+    function isValidJournalMessage(data) {
+       return data.keys().hasAll(['role', 'content', 'timestamp']) &&
+              data.keys().size() >= 3 && data.keys().size() <= 6 &&
+              data.role is string && (data.role == 'user' || data.role == 'model') &&
+              data.content is string && data.content.size() <= 50000 &&
+              data.timestamp is timestamp &&
+              (!('mood' in data) || (data.mood is string && data.mood.size() <= 10));
+    }
+
+    match /users/{userId}/journals/{journalId} {
+      allow read: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(journalId);
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(journalId)
+                    && isValidJournalEntryCreate(incoming(), userId)
+                    && incoming().createdAt == request.time
+                    && incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(journalId)
+                    && isValidJournalEntryUpdate(incoming(), userId)
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().userId == existing().userId
+                    && incoming().updatedAt == request.time
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'summary', 'mood', 'tags', 'wordCount', 'updatedAt', 'images']);
+                    
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(journalId);
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(journalId) && isValidId(messageId)
+                      && isValidJournalMessage(incoming())
+                      && incoming().timestamp == request.time
+                      && exists(/databases/$(database)/documents/users/$(userId)/journals/$(journalId));
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(journalId) && isValidId(messageId);
+        allow update: if false;
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "JournalEntry": {
+      "title": "JournalEntry",
+      "description": "A top-level journal document for a user.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Timestamp"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 5000
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10
+        },
+        "wordCount": {
+          "type": "number",
+          "description": "Total words"
+        }
+      },
+      "required": [
+        "title",
+        "createdAt",
+        "updatedAt",
+        "userId"
+      ]
+    },
+    "JournalMessage": {
+      "title": "JournalMessage",
+      "description": "A message within a journal entry.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "user",
+            "model"
+          ]
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 50000
+        },
+        "timestamp": {
+          "type": "number",
+          "description": "Timestamp"
+        },
+        "mood": {
+          "type": "string",
+          "maxLength": 10
+        }
+      },
+      "required": [
+        "role",
+        "content",
+        "timestamp"
+      ]
+    }
+  },
+  "firestore": {
+    "users/{userId}/journals/{journalId}": {
+      "schema": {
+        "$ref": "#/entities/JournalEntry"
+      },
+      "description": "Journal entries belonging to a specific user."
+    },
+    "users/{userId}/journals/{journalId}/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/JournalMessage"
+      },
+      "description": "Messages belonging to a specific journal entry."
+    }
+  }
+}
