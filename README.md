@@ -14,10 +14,13 @@ Reflect AI Journal is a secure, intelligent, and interactive journaling applicat
 
 ## 🏗️ Architecture
 - **Frontend**: React 18, Vite, Tailwind CSS, Recharts (for analytics), Framer Motion (for animations).
-- **Backend API**: Node.js/Express full-stack proxy bundled via esbuild for Cloud Run.
+- **Backend API**: Express full-stack proxy bundled via esbuild for Cloud Run.
 - **Database**: Cloud Firestore (NoSQL) with secure Role-Based Access Control / Owner-Bound Rules.
 - **AI Integration**: `@google/genai` Node SDK invoking `gemini-3.6-flash`.
 - **Secrets Management**: Google Cloud Secret Manager.
+
+
+![System Architecture](./system-design.png)
 
 ---
 
